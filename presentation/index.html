@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>AI 說的對,還是聽起來對? — 建築人工作坊</title>
+<style>
+/* ============================================================
+   V–A–C Style System  (achromatic editorial / exhibition catalog) — Pravah acceptance standard (驗收標準.md)
+   ink #181011 · paper #f3f1ed (Parchment) · dark #302023 (Aubergine) · ash #aaaaaa / dim #666666 (muted text) · bone #d8d4d4 (hairlines) · hierarchy = weight + tonal inversion, never hue (FAIL/warning/seal/keyline read by weight, not color) · 4px radius, 100px pill CTA only
+   Henry — warm broadside monochrome (adapted for ARCH judgement workshop)
+   ============================================================ */
+:root{
+  --color-ink:#181011;
+  --color-paper:#f3f1ed;
+  --color-graphite:#aaaaaa; /* Ash — muted secondary text */
+  --color-ash:#666666; /* Dim — slightly stronger muted text/labels */
+  --color-bone:#d8d4d4; /* hairline / low-emphasis dividers */
+  --color-field:#EDE6D6;
+  --color-inkline:#4a463f;
+  --color-dark:#302023;
+  --font-text:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+  --radius:4px;
+  --radius-pill:100px;
+  --leading-tight:0.88;
+  --leading-body:1.5;
+  --page-max:1200px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-text);
+  font-weight:400;
+  color:var(--color-ink);
+  background:var(--color-paper);
+  overflow:hidden;
+  line-height:var(--leading-body);
+  letter-spacing:-0.01em;
+}
+::selection{background:var(--color-ink);color:var(--color-paper);}
+
+/* ---------- V—A—C registration bar ---------- */
+.regbar{position:fixed;top:0;left:0;right:0;height:0;border-top:1px solid var(--color-ink);z-index:50;}
+.regbar .mark{position:absolute;top:6px;font-size:20px;line-height:1;letter-spacing:.04em;}
+.regbar .v{left:24px;}
+.regbar .a{left:50%;transform:translateX(-50%);text-align:center;}
+.regbar .a .up{display:block;font-size:13px;margin-top:2px;}
+.regbar .c{right:24px;}
+
+/* ---------- right edge vertical nav ---------- */
+.edgenav{position:fixed;right:10px;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;font-size:15px;letter-spacing:.14em;z-index:40;color:var(--color-ink);user-select:none;}
+.edgenav span{color:var(--color-graphite);}
+.edgenav b{font-weight:400;}
+
+/* ---------- left edge locale ---------- */
+.localesw{position:fixed;left:16px;bottom:16px;font-size:14px;z-index:40;color:var(--color-graphite);user-select:none;letter-spacing:.02em;cursor:pointer;}
+.localesw:hover{color:var(--color-ink);}
+body.dark-mode .localesw:hover{color:var(--color-paper);}
+
+/* ---------- deck ---------- */
+.deck{position:relative;width:100%;height:100%;}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:64px clamp(24px,5vw,48px) 80px;max-width:var(--page-max);margin:0 auto;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .35s ease,transform .35s ease,visibility .35s;overflow-y:auto;}
+@media (prefers-reduced-motion: reduce){.slide{transition:none;}}
+.slide.active{opacity:1;visibility:visible;transform:none;}
+.slide.top{justify-content:flex-start;}
+
+/* bottom-edge scroll affordance — only shown when a slide's content exceeds its viewport (§六) */
+.slide.can-scroll:after{content:"⇣";position:absolute;right:16px;bottom:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);border:1px solid var(--color-ink);background:var(--color-paper);color:var(--color-ink);font-size:14px;pointer-events:none;z-index:2;}
+.slide.dark.can-scroll:after{border-color:var(--color-paper);background:var(--color-dark);color:var(--color-paper);}
+
+.kicker{font-family:var(--font-text);font-size:12px;line-height:1.4;font-weight:700;text-transform:uppercase;letter-spacing:.10em;color:var(--color-ash);margin-bottom:16px;display:flex;gap:12px;align-items:baseline;}
+.kicker .num{color:var(--color-graphite);}
+
+/* inverted editorial letter (closing) */
+.slide.letter{justify-content:center;align-items:center;text-align:center;}
+.letter-eyebrow,.letter-foot{font-family:var(--font-text);font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:.14em;color:var(--color-graphite);}
+.letter-eyebrow{margin-bottom:24px;}
+.letter-foot{margin-top:24px;max-width:46ch;}
+.letter-body{font-family:var(--font-text);font-weight:400;font-size:40px;line-height:1.2;letter-spacing:-.02em;color:var(--color-paper);max-width:24ch;margin:0 auto;}
+.letter-body em{font-style:italic;}
+
+h1.display{font-family:var(--font-text);font-weight:400;font-size:48px;line-height:1.1;letter-spacing:-.02em;max-width:22ch;margin-bottom:16px;}
+h2.display{font-family:var(--font-text);font-weight:400;font-size:32px;line-height:1.3;letter-spacing:-.02em;margin-bottom:14px;max-width:20ch;}
+
+/* card/box radius: 4px flat, no shadows — .btnbox (primary CTA) is the sole pill exception */
+a.toolcard,.codewrap,.spbox,.hstep,a.btnbox,.genwrap,.note,
+.copybtn,.gencopy,.spcopy,.navbtns button,.fnrow,.warnbox{border-radius:var(--radius);}
+.codewrap,.spbox{overflow:hidden;}
+.lead{font-family:var(--font-text);font-weight:400;font-size:20px;line-height:1.4;max-width:52ch;margin-bottom:12px;}
+.lead b{font-weight:500;font-style:italic;}
+p.body{font-size:17px;line-height:1.5;max-width:56ch;margin-bottom:10px;}
+.muted{color:var(--color-graphite);}
+
+ul.list{list-style:none;max-width:62ch;}
+ul.list li{font-size:17px;line-height:1.5;padding:9px 0 9px 26px;position:relative;border-top:1px solid var(--color-bone);}
+ul.list li:first-child{border-top:1px solid var(--color-bone);}
+ul.list li:before{content:"↗";position:absolute;left:0;top:14px;}
+ul.list.plain li:before{content:"—";color:var(--color-graphite);}
+
+/* sub-note blocks reused on content slides */
+.note{border-left:2px solid var(--color-ink);padding:4px 0 4px 18px;margin:24px 0;max-width:56ch;font-size:14px;}
+.note .tag{color:var(--color-graphite);}
+
+/* ---------- bottom progress / controls ---------- */
+.foot{position:fixed;left:0;right:0;bottom:0;height:0;border-top:1px solid var(--color-ink);z-index:45;}
+.counter{position:fixed;bottom:14px;right:24px;font-size:16px;z-index:46;}
+.counter .muted{color:var(--color-graphite);}
+.navbtns{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:46;display:flex;gap:10px;}
+.navbtns button{font-family:inherit;font-size:16px;background:none;border:1px solid var(--color-ink);width:38px;height:32px;cursor:pointer;color:var(--color-ink);}
+.navbtns button:hover{background:var(--color-ink);color:var(--color-paper);}
+.navbtns button:disabled{opacity:.25;cursor:default;}
+.progline{position:fixed;top:0;left:0;height:2px;background:var(--color-ink);z-index:49;width:0;transition:width .45s ease;}
+.hint{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--color-graphite);z-index:46;white-space:nowrap;}
+
+/* ---------- slide 1: tool download grid ---------- */
+.tools-head{font-size:14px;color:var(--color-graphite);margin:24px 0 16px;}
+.tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:820px;}
+a.toolcard{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:var(--color-ink);border:1px solid var(--color-ink);padding:24px;min-height:96px;}
+a.toolcard:hover{background:var(--color-ink);color:var(--color-paper);}
+a.toolcard .ic{font-size:22px;line-height:1;}
+a.toolcard .tname{font-size:17px;}
+a.toolcard .tdesc{font-size:13px;color:var(--color-graphite);line-height:1.45;}
+a.toolcard:hover .tdesc{color:var(--color-graphite);}
+a.toolcard .dl{font-size:12px;margin-top:auto;}
+a.toolcard .dl:before{content:"↓ ";}
+
+/* ---------- warning banner ---------- */
+.warnbox{border:1px solid var(--color-ink);background:var(--color-field);padding:16px 24px;font-size:14px;line-height:1.5;max-width:780px;margin-top:24px;}
+
+/* ---------- code block (prompt templates) ---------- */
+.codewrap{border:1px solid var(--color-ink);max-width:880px;margin-top:24px;position:relative;}
+.codebar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--color-bone);padding:16px 24px;font-size:14px;gap:12px;}
+.copybtn{font-family:inherit;font-size:14px;background:none;border:1px solid var(--color-ink);padding:8px 16px;cursor:pointer;color:var(--color-ink);flex:none;}
+.copybtn:hover{background:var(--color-ink);color:var(--color-paper);}
+.copybtn.done{background:var(--color-ink);color:var(--color-paper);}
+.copybtn:focus-visible,.gencopy:focus-visible,.navbtns button:focus-visible,a.btnbox:focus-visible,a.toolcard:focus-visible{outline:2px solid var(--color-ink);outline-offset:2px;}
+.slide.dark .copybtn:focus-visible,.slide.dark .gencopy:focus-visible,.slide.dark .navbtns button:focus-visible,.slide.dark a.btnbox:focus-visible,.slide.dark a.toolcard:focus-visible{outline-color:#fff;}
+pre.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:16px 24px;overflow-y:auto;max-height:320px;white-space:pre-wrap;word-break:break-word;background:var(--color-paper);color:var(--color-ink);}
+
+/* ---------- slide "動手一": case list (left) + live case block (right) — reuses the slide-7 dynamic-assembly pattern ---------- */
+.weigh-layout{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:stretch;max-width:1120px;margin-top:24px;}
+.weigh-left,.weigh-right{display:flex;flex-direction:column;gap:16px;}
+.weigh-right .codewrap{margin-top:0;flex:1;display:flex;flex-direction:column;}
+.weigh-right .codewrap pre.code{flex:1;}
+.p4-props{margin-top:auto;padding-top:16px;}
+.p4-props figure.ill{flex:1 1 0;max-width:none;}
+.p4-props img{height:180px;width:100%;object-fit:contain;}
+/* bottom LOOP unit (page 4): text (1/3) + image (2/3), left-aligned, no orphan centering */
+.p4-loop{display:flex;gap:24px;align-items:flex-start;margin-top:24px;}
+.p4-loop-text{flex:1 1 33%;text-align:left;}
+.p4-loop-text h3{font-size:20px;font-weight:500;line-height:1.3;margin-bottom:8px;}
+.p4-loop-fig{flex:2 1 66%;margin:0;}
+.p4-loop-fig img{height:300px;width:100%;object-fit:contain;}
+@media (max-width:900px){.p4-loop{flex-direction:column;}.p4-loop-text,.p4-loop-fig{flex:1 1 auto;}}
+.fn-eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.10em;color:var(--color-ash);margin-bottom:16px;}
+.fnlist{border-top:1px solid var(--color-bone);}
+.fnrow{display:flex;align-items:baseline;gap:16px;padding:8px 16px;border-bottom:1px solid var(--color-bone);cursor:pointer;transition:background .18s ease,color .18s ease;}
+.fnrow:hover{background:#E6DFCE;}
+.fnrow .fnum{font-size:12px;color:var(--color-graphite);width:2.5ch;flex:none;}
+.fnrow .fzh{font-family:var(--font-text);font-weight:400;font-size:18px;line-height:1.3;flex:none;}
+.fnrow .fen{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-ash);flex:none;}
+.fnrow .fdesc{font-size:13px;color:var(--color-ash);margin-left:auto;text-align:right;max-width:22ch;line-height:1.35;}
+.fnrow.sel{background:var(--color-ink);color:var(--color-paper);}
+.fnrow.sel .fnum,.fnrow.sel .fen,.fnrow.sel .fdesc{color:var(--color-graphite);}
+.fnrow.sel .fzh:before{content:"✓ ";}
+.fnrow.disabled{opacity:.35;cursor:default;pointer-events:none;}
+.weigh-count{font-size:14px;margin-bottom:16px;color:var(--color-ash);}
+.weigh-count b{font-weight:400;color:var(--color-ink);}
+.genwrap{border:1px solid var(--color-ink);border-radius:var(--radius);width:100%;overflow:hidden;}
+.genbar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--color-bone);padding:16px 24px;font-size:14px;color:var(--color-ash);gap:12px;}
+.gencopy{font-family:inherit;font-size:14px;background:none;border:1px solid var(--color-ink);border-radius:var(--radius);padding:8px 16px;cursor:pointer;color:var(--color-ink);flex:none;}
+.gencopy:hover,.gencopy.done{background:var(--color-ink);color:var(--color-paper);}
+.gentext{padding:16px 24px;font-size:14px;line-height:1.6;white-space:pre-wrap;color:var(--color-ink);max-height:160px;overflow-y:auto;}
+.gentext .ph{color:var(--color-graphite);}
+.gentext .gk{color:var(--color-graphite);display:block;margin-top:8px;}
+
+/* ---------- hands-on step cards ---------- */
+.handson{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:960px;margin:24px 0;}
+.hstep{border:1px solid var(--color-ink);padding:24px;display:flex;flex-direction:column;gap:8px;}
+.hstep .hn{font-size:13px;color:var(--color-graphite);}
+.hstep .ht{font-size:16px;}
+a.btnbox{display:inline-block;text-decoration:none;color:var(--color-ink);border:1px solid var(--color-ink);border-radius:var(--radius-pill);padding:8px 16px;font-size:14px;margin-top:auto;}
+a.btnbox:hover{background:var(--color-ink);color:var(--color-paper);}
+a.btnbox.board{background:var(--color-ink);color:var(--color-paper);font-weight:500;}
+a.btnbox.board:before{content:"▦ ";}
+a.btnbox.board:hover{opacity:.85;}
+a.btnbox.home:before{content:"← ";}
+.slide.dark a.btnbox{color:var(--color-paper);border-color:var(--color-paper);}
+.slide.dark a.btnbox:hover{background:var(--color-paper);color:var(--color-ink);}
+.slide.dark a.btnbox.board{background:var(--color-paper);color:var(--color-ink);}
+.slide.dark a.btnbox.board:hover{opacity:.85;}
+
+/* ---------- slide "對照": two-column compare on a dark broadside ---------- */
+.slide.dark{background:var(--color-dark);color:var(--color-paper);}
+.slide.dark .kicker{color:var(--color-paper);}
+.slide.dark .kicker .num{color:var(--color-graphite);}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:1100px;margin-top:24px;}
+.compare-col{border:1px solid var(--color-inkline);padding:24px;}
+.compare-label{font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:.10em;color:var(--color-graphite);margin-bottom:16px;}
+.fake-chat{font-family:var(--font-text);font-size:15px;line-height:1.6;color:var(--color-paper);}
+.fake-chat .q{color:var(--color-graphite);margin-bottom:16px;}
+.fake-chat .a{color:var(--color-paper);font-style:italic;opacity:.92;}
+.fake-chat .a:after{content:" — 聽起來對,但沒有依據";display:block;font-size:12px;color:var(--color-graphite);font-style:normal;margin-top:8px;}
+.report-lines{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;line-height:2;color:var(--color-paper);}
+.report-lines .lab{color:var(--color-graphite);}
+.report-lines .fail{font-weight:700;letter-spacing:.04em;color:#fff;}
+.compare-caption{margin-top:24px;font-family:var(--font-text);font-weight:400;font-size:20px;line-height:1.4;letter-spacing:-.02em;color:var(--color-paper);max-width:52ch;}
+
+/* ---------- slide "動手三": bottom two-up image row ---------- */
+.p6-img-row{display:flex;flex-wrap:wrap;gap:24px;margin-top:24px;}
+.p6-img-row figure.ill{flex:1 1 48%;max-width:48%;margin:0;}
+.p6-img-row img{width:100%;}
+@media (max-width:900px){.p6-img-row figure.ill{flex:1 1 100%;max-width:100%;}}
+
+/* ---------- dark-slide overrides for reused paper components (codewrap / list) ---------- */
+.slide.dark h2.display{color:var(--color-paper);}
+.slide.dark p.body{color:var(--color-paper);}
+.slide.dark .muted{color:var(--color-graphite);}
+.slide.dark .codewrap{border-color:var(--color-inkline);}
+.slide.dark .codebar{border-color:var(--color-inkline);color:var(--color-paper);}
+.slide.dark pre.code{background:transparent;color:var(--color-paper);}
+.slide.dark .copybtn{border-color:var(--color-paper);color:var(--color-paper);}
+.slide.dark .copybtn:hover,.slide.dark .copybtn.done{background:var(--color-paper);color:var(--color-ink);}
+.slide.dark ul.list li{border-color:var(--color-inkline);color:var(--color-paper);}
+.slide.dark ul.list li:before{color:var(--color-graphite);}
+.slide.dark .hstep{border-color:var(--color-inkline);color:var(--color-paper);}
+.slide.dark .hstep .hn{color:var(--color-graphite);}
+
+/* ---------- INK band: fixed UI flips to cream on full-bleed dark slides ---------- */
+body.dark-mode{background:var(--color-dark);}
+body.dark-mode .regbar{border-color:var(--color-paper);}
+body.dark-mode .regbar .mark{color:var(--color-paper);}
+body.dark-mode .edgenav{color:var(--color-paper);}
+body.dark-mode .edgenav span,body.dark-mode .localesw,body.dark-mode .counter .muted,body.dark-mode .hint{color:var(--color-graphite);}
+body.dark-mode .counter{color:var(--color-paper);}
+body.dark-mode .progline{background:var(--color-paper);}
+body.dark-mode .navbtns button{border-color:var(--color-paper);color:var(--color-paper);}
+body.dark-mode .navbtns button:hover{background:var(--color-paper);color:var(--color-ink);}
+
+@media (max-width:900px){
+  .tool-grid,.handson{grid-template-columns:1fr 1fr;}
+  .weigh-layout,.compare-grid{grid-template-columns:1fr;gap:24px;}
+  .hint{display:none;}
+  .edgenav,.localesw{display:none;}
+  .slide{padding:48px 24px 80px;}
+  h1.display{font-size:34px;}
+  h2.display{font-size:26px;}
+  .letter-body{font-size:28px;}
+  p.body,ul.list li{font-size:15px;}
+}
+
+/* ---------- illustration figures (STYLE BLOCK: warm cream / ink line, graceful degradation) ---------- */
+/* light slides: image melts into the paper — no card, just multiply-blended ink */
+figure.ill{margin:0;border:none;background:none;padding:0;display:flex;flex-direction:column;}
+figure.ill img{display:block;max-width:100%;width:auto;height:auto;object-fit:contain;mix-blend-mode:multiply;}
+/* image-height budget (驗收標準 §五): fixed px tiers sized for a 1200px column — never vh, images cap independently of viewport */
+img[src$="p7-a.png"]{max-height:340px;}
+img[src$="p2-a.png"],img[src$="p2-b.png"]{max-height:280px;}
+/* page 3 compare: both images share the same fixed height so the two cards read as structurally parallel */
+img[src$="p3-a.png"],img[src$="p3-b.png"]{height:280px;max-height:280px;object-fit:contain;}
+/* page 6 bottom two-up image row: same fixed height, contained */
+img[src$="p6-a.png"],img[src$="p6-b.png"]{height:300px;max-height:300px;object-fit:contain;}
+img[src$="p4-a.png"],img[src$="p4-b.png"]{max-height:180px;}
+img[src$="p5-a.png"],img[src$="p5-b.png"],img[src$="p5-c.png"],img[src$="p5-d.png"]{max-height:260px;}
+img[src$="p8-a.png"]{max-height:220px;}
+/* dark slides: figure reads as a print pinned to a dark wall — warm mat, no blend, no border */
+.slide.dark figure.ill{background:#F2EDE3;padding:8px;border:none;width:fit-content;margin-inline:auto;}
+.slide.dark figure.ill img{mix-blend-mode:normal;}
+
+/* row wrappers for side-by-side illustrations */
+.ill-row{display:flex;flex-wrap:wrap;gap:16px;}
+.ill-row figure.ill{flex:1 1 220px;}
+
+/* slide 1: tool grid (full content width) + p1-a as a faded background layer */
+.tools-row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;}
+.tools-row .tool-grid{flex:2 1 500px;margin-top:0;width:100%;}
+
+/* .slide is already position:absolute (deck stacking context), so .p1-bg just needs to be positioned within it */
+.p1-bg{position:absolute;right:0;top:50%;transform:translateY(-50%);width:42%;max-height:560px;opacity:.3;z-index:0;pointer-events:none;margin:0;}
+.p1-bg img{width:100%;height:100%;max-height:560px;object-fit:contain;}
+.p1-content{position:relative;z-index:1;}
+
+/* slide 4: side-by-side pair + full-width triptych anchor */
+.ill-pair{display:flex;flex-wrap:wrap;gap:16px;margin:16px 0;}
+.ill-pair figure.ill{flex:1 1 200px;max-width:45%;}
+@media (max-width:900px){.ill-pair figure.ill{max-width:100%;}}
+figure.ill.ill-full{max-width:960px;margin-top:24px;}
+
+/* slide 5: four route illustrations, 4-across / 2x2 — each route is one visual unit, image and cost text live inside the same card */
+.route-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1200px;margin:24px 0 8px;align-items:end;}
+.route-card{display:flex;flex-direction:column;gap:8px;}
+.route-card figure.ill{display:flex;flex-direction:column;justify-content:flex-start;align-items:center;}
+.route-card figure.ill img{height:240px;width:100%;object-fit:contain;}
+.route-card .route-text{min-height:3em;}
+.route-text{font-size:14px;line-height:1.4;}
+@media (max-width:900px){.route-cards{grid-template-columns:1fr 1fr;}}
+
+/* slide 8: small centered closing illustration */
+figure.ill.ill-small{max-width:240px;margin:24px auto 0;}
+
+/* V-rules: scrollable text boxes must LOOK scrollable (macOS hides scrollbars) */
+pre.code::-webkit-scrollbar,.gentext::-webkit-scrollbar{width:8px;}
+pre.code::-webkit-scrollbar-thumb,.gentext::-webkit-scrollbar-thumb{background:var(--color-graphite);border-radius:4px;}
+pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:var(--color-field);}
+.slide.dark pre.code::-webkit-scrollbar-thumb{background:var(--color-graphite);}
+.slide.dark pre.code::-webkit-scrollbar-track{background:#3a352d;}
+.codebar .scrollhint{font-size:12px;color:var(--color-graphite);margin-left:8px;}
+
+/* keyline: the one sentence each page wants remembered */
+.keyline{font-family:var(--font-text);font-weight:700;font-size:28px;line-height:1.4;letter-spacing:-.02em;border-left:2px solid var(--color-ink);padding-left:16px;margin:24px 0 8px;max-width:44ch;}
+.slide.dark .keyline{color:var(--color-paper);border-left-color:rgba(255,255,255,.9);}
+@media (max-width:900px){.keyline{font-size:22px;}}
+</style>
+</head>
+<body>
+
+<!-- registration bar -->
+<div class="regbar">
+  <div class="mark v">V</div>
+  <div class="mark a">A<span class="up">&#8593;</span></div>
+  <div class="mark c">C</div>
+</div>
+
+<div class="progline" id="progline"></div>
+<nav class="edgenav">建築人 <span>·</span> AI 檢討標準工作坊</nav>
+<div class="localesw" id="brandHome" title="回到第一頁">自主檢核循環(LOOP)· Architects Workshop</div>
+
+<main class="deck" id="deck">
+
+  <!-- 1 — 開場 -->
+  <section class="slide p1-slide" data-title="開場">
+    <figure class="ill p1-bg" aria-hidden="true">
+      <img src="assets/arch/p1-a.png" alt="建築師的桌面速寫:攤開的平面圖上放一台筆電,螢幕是簡潔的聊天視窗,桌角一支鋼筆與一個三角板" loading="lazy" onerror="this.closest('figure').style.display='none'">
+    </figure>
+    <div class="p1-content">
+      <div class="kicker"><span class="arrow">↗</span> <span>Opening</span> <span class="num">01 / 08</span></div>
+      <h1 class="display">「AI 說的對,還是聽起來對?」</h1>
+      <p class="lead">建築人的一小時 —— 自主檢核循環 × 總指揮/顧問定案</p>
+      <p class="body">今天不練「怎麼問出更好的答案」,而是練<b>怎麼判斷 AI 給的答案能不能用</b>。一小時做兩件事:先學會自己查(自主檢核循環),再學會怎麼找人定案。</p>
+      <div class="tools-head">↗ 開始前,請確認你有以下工具(點圖卡前往)</div>
+      <div class="tools-row">
+        <div class="tool-grid">
+          <a class="toolcard" href="https://chatgpt.com" target="_blank" rel="noopener">
+            <span class="ic">✦</span><span class="tname">任一網頁版 AI</span>
+            <span class="tdesc">ChatGPT / Gemini / Claude 皆可 —— 開你平常用的那個就好</span><span class="dl">今天主線,必備</span>
+          </a>
+          <a class="toolcard" href="https://antigravity.google/download" target="_blank" rel="noopener">
+            <span class="ic">▲</span><span class="tname">Antigravity IDE</span>
+            <span class="tdesc">進階選項,今天用不到也沒關係</span><span class="dl">進階</span>
+          </a>
+          <a class="toolcard" href="https://docs.anthropic.com/en/docs/claude-code" target="_blank" rel="noopener">
+            <span class="ic">❯_</span><span class="tname">Claude Code · Codex · Copilot CLI</span>
+            <span class="tdesc">終端機工具,給想更進一步的人</span><span class="dl">進階</span>
+          </a>
+        </div>
+      </div>
+      <div class="warnbox">⚠️ 今天主線只需要「一個網頁聊天視窗」——其他都是進階選項,不會就跳過。</div>
+    </div>
+  </section>
+
+  <!-- 2 — 質問:語意 vs 意義 -->
+  <section class="slide" data-title="質問">
+    <div class="kicker"><span class="arrow">↗</span> <span>The Question</span> <span class="num">02 / 08</span></div>
+    <h1 class="display">你要的答案,是<b>語意的光譜</b>,<br>還是<b>意義的絕對正確</b>?</h1>
+    <p class="keyline">「哪些事需要絕對正確」——這個分辨本身是語意判斷,是你不能讓渡的職責。</p>
+    <div class="compare-grid" style="margin-top:12px;">
+      <div class="compare-col">
+        <div class="compare-label">語意 · 光譜</div>
+        <figure class="ill">
+          <img src="assets/arch/p2-a.png" alt="會議桌速寫:幾個人圍桌,頭頂飄著大小不一、深淺不一的對話泡泡,暗示語意的光譜感" loading="lazy" onerror="this.closest('figure').style.display='none'">
+        </figure>
+        <p class="body">沒有唯一解,只有取捨:方案比較、業主溝通、要不要退讓。<br><b>用對話處理</b>——AI 陪你走光譜,但走到哪由你判斷。</p>
+      </div>
+      <div class="compare-col">
+        <div class="compare-label">意義 · 絕對正確</div>
+        <figure class="ill">
+          <img src="assets/arch/p2-b.png" alt="法規檢討表特寫:格子工整的表格,一格被深色筆勾選打勾,旁邊一枚印章" loading="lazy" onerror="this.closest('figure').style.display='none'">
+        </figure>
+        <p class="body">對就是對,錯就是錯:法規數值、面積計算、條號出處。<br><b>用程式處理(.py)</b>——不准任何模型「覺得」。</p>
+      </div>
+    </div>
+    <p class="body" style="margin-top:12px;">以終為始:先知道你要的是光譜還是絕對,才派得動對的工具。</p>
+  </section>
+
+  <!-- 3 — 對照:一句話問到底 vs 拆塊分工的生產線 -->
+  <section class="slide dark" data-title="對照">
+    <div class="kicker"><span class="arrow">↗</span> <span>Compare</span> <span class="num">03 / 08</span></div>
+    <h2 class="display">這三行報告,<br>不是一句話問出來的。</h2>
+    <div class="compare-grid">
+      <div class="compare-col">
+        <div class="fake-chat">
+          <div class="q">Q:這間房間的採光,設計上沒問題吧?</div>
+          <div class="a">A:採光應該沒問題,一般住宅這樣的開窗配置多半能滿足需求。</div>
+        </div>
+        <p class="body" style="margin-top:12px;">一個問題、一包混沌——規則、數字、判斷全部攪在一起,哪裡錯了你查不到。</p>
+        <figure class="ill">
+          <img src="assets/arch/p3-a.png" alt="糊在一起的示意:一個巨大混濁的對話泡泡,裡面隱約纏著法規條文、數字、問號的線條" loading="lazy" onerror="this.closest('figure').style.display='none'">
+        </figure>
+      </div>
+      <div class="compare-col">
+        <div class="fake-chat">
+          <div class="q">Q:這間房間的採光,設計上沒問題吧?</div>
+        </div>
+        <div class="report-lines" style="font-size:17px;line-height:1.5;margin-top:12px;">
+          <div><span class="lab">塊一(意義):</span>找規則——一個 agent 深入查證法源,逐字比對現行條文原文,帶出處回來</div>
+          <div><span class="lab">塊二(意義):</span>取數字——另一個 agent 同時從你的圖面/模型取實測值,可追溯</div>
+          <div><span class="lab">塊三(語意):</span>這間算不算居室?要檢討什麼?——<b>這塊是你的,不能外包</b></div>
+        </div>
+        <div class="report-lines" style="margin-top:6px;font-size:17px;line-height:1.5;"><div style="border-top:1px solid rgba(246,241,229,.25);padding-top:6px;"><span class="lab">匯合:</span>檢討標準 ≥ 1/8(12.5%,建技§41)｜實測 9.5%｜<span class="fail">FAIL</span>,差 3.0 個百分點<br><span style="opacity:.65;">(9.5% 與差值為教學虛構值,僅 12.5% 為法定標準)</span></div></div>
+        <figure class="ill">
+          <img src="assets/arch/p3-b.png" alt="生產線速寫:三個工作站(查條文的桌、量圖面的桌、做判斷的桌)以輸送帶相連,匯到終點一張三行小報告,做判斷的那一站以深色點出" loading="lazy" onerror="this.closest('figure').style.display='none'">
+        </figure>
+      </div>
+    </div>
+    <p class="compare-caption" style="margin-top:10px;">拆塊之後,每一塊先問一句:這塊是語意,還是意義?——意義塊給程式與原文,語意塊留給人。</p>
+    <p class="keyline">右邊那個 FAIL,不是死刑——是決策的起點。</p>
+  </section>
+
+  <!-- 4 — 動手一・檢討標準卡 -->
+  <section class="slide top" data-title="動手一・檢討標準卡">
+    <div class="kicker"><span class="arrow">↗</span> <span>Hands-on 1</span> <span class="num">04 / 08</span></div>
+    <h2 class="display">動手一・檢討標準卡</h2>
+    <div class="handson">
+      <div class="hstep"><span class="hn">Step 1</span><span class="ht">開你平常用的網頁 AI</span></div>
+      <div class="hstep"><span class="hn">Step 2</span><span class="ht">按下方「複製檢討標準卡」</span></div>
+      <div class="hstep"><span class="hn">Step 3</span><span class="ht">貼上,再貼進你的案子數字</span></div>
+      <div class="hstep"><span class="hn">Step 4</span><span class="ht">看它敢不敢說 FAIL</span></div>
+    </div>
+
+    <div class="weigh-layout">
+      <div class="weigh-left">
+        <div class="fn-eyebrow">— 選擇你的檢討項目 —</div>
+        <div class="fnlist" id="caseList"></div>
+        <div class="ill-pair p4-props">
+          <figure class="ill">
+            <img src="assets/arch/p4-a.png" alt="檢討標準卡的誕生:一張法規檢討表被手翻拍轉印成一張卡片,卡角有法源條號的印記" loading="lazy" onerror="this.closest('figure').style.display='none'">
+          </figure>
+          <figure class="ill">
+            <img src="assets/arch/p4-b.png" alt="從圖面量數字:平面圖上一扇窗被比例尺與捲尺丈量,數字流向一張便箋" loading="lazy" onerror="this.closest('figure').style.display='none'">
+          </figure>
+        </div>
+      </div>
+      <div class="weigh-right">
+        <div class="weigh-count" id="caseCount">已選檢討項目:<b>採光</b></div>
+        <div class="genwrap">
+          <div class="genbar"><span>↗ 已自動帶入下方檢討標準卡的檢討項目欄</span><button class="gencopy" id="caseCopy">複製</button></div>
+          <div class="gentext" id="caseText"></div>
+        </div>
+        <div class="codewrap">
+          <div class="codebar"><span class="muted">檢討標準卡 · prompt 範本<span class="scrollhint">⇣ 內文可捲動</span></span>
+            <button class="copybtn" id="criteriaBtn" onclick="copyBlock('tplCriteria',this)">複製檢討標準卡</button>
+          </div>
+          <pre class="code" id="tplCriteria">【任務】依下面的檢討標準,核對我提供的實測數值。
+【起點】輸入兩樣:1) 檢討標準(已含法源條號與官方核驗數值) 2) 我貼上的案子數字(面積、開窗尺寸等)。
+【終點】輸出:每一條標準一行——PASS 或 FAIL;FAIL 要寫出「差多少」。不多話。
+
+<span id="caseSlot">檢討項目:採光(建築技術規則建築設計施工編第41條)——已帶入官方核驗數值</span>
+1. 幼兒園及學校教室:採光面積應達樓地板面積 1/5(20%)(建築技術規則建築設計施工編第41條)
+2. 住宅之居室、寄宿舍臥室、醫院病房、兒童福利設施:採光面積應達樓地板面積 1/8(12.5%)(建築技術規則建築設計施工編第41條)
+3. 有效採光面積計算:地板面以上75公分範圍內之窗或開口,不計入採光面積(建築技術規則建築設計施工編第41條)
+
+【流程】逐條比對:每一條標準,寫出它對到我給的哪個數字、算式列出來。
+【邊界】不准給設計建議;不准自己補數字;資料不足,該條寫「無法檢核」並說缺哪個數字。
+【修正】我更新數字重貼時,用同一套標準重新核對,並跟上一輪比較:差距有沒有縮小。</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:32px;"><span class="tag">判準來源:</span>建築技術規則§41/§100/§101、消防安全設備設置標準§188,經全國法規資料庫現行條文逐字核對(2026-07-12);domain 智慧來自 REVIT_MCP_study 貢獻者社群</div>
+    <div class="warnbox">⚠️ 數值已經逐字核對現行法規,但個案適用仍須由開業建築師判斷;本頁為教學演練,不是簽證依據。</div>
+
+    <div class="p4-loop">
+      <div class="p4-loop-text">
+        <h3>查一次不夠——改數字、重貼、查到 PASS 為止</h3>
+        <p class="body">卡片最後一行【修正】寫的就是這件事:更新數字重貼,它會用同一套標準重測,並比較差距有沒有縮小。</p>
+      </div>
+      <figure class="ill p4-loop-fig">
+        <img src="assets/arch/p4-c.png" alt="LOOP 三格連環:同一扇窗三個狀態,小窗深色 FAIL、加寬後深色 FAIL 但差距變小、再加寬後墨黑打勾 PASS,三格間以迴圈箭頭相連" loading="lazy" onerror="this.closest('figure').style.display='none'">
+      </figure>
+    </div>
+  </section>
+
+  <!-- 5 — 動手二・A/B/C/D -->
+  <section class="slide" data-title="動手二・A/B/C/D">
+    <div class="kicker"><span class="arrow">↗</span> <span>Hands-on 2</span> <span class="num">05 / 08</span></div>
+    <h2 class="display">FAIL 之後,<br>四條路怎麼選?</h2>
+    <div class="route-cards">
+      <div class="route-card">
+        <figure class="ill">
+          <img src="assets/arch/p5-a.png" alt="A 改設計:一隻手在圖上擦掉舊窗、畫上大窗,旁邊柱子被紅色圈出,暗示連動代價" loading="lazy" onerror="this.closest('figure').style.display='none'">
+        </figure>
+        <div class="route-text"><b>A 改設計</b> —— COST:連動評估必跑</div>
+      </div>
+      <div class="route-card">
+        <figure class="ill">
+          <img src="assets/arch/p5-b.png" alt="B 接受:一份文件上兩個簽名欄與一枚印章,其中一行被紅色底線標記" loading="lazy" onerror="this.closest('figure').style.display='none'">
+        </figure>
+        <div class="route-text"><b>B 接受現狀</b> —— COST:主管簽字 + 業主同意</div>
+      </div>
+      <div class="route-card">
+        <figure class="ill">
+          <img src="assets/arch/p5-c.png" alt="C 改定義:房門上的名牌從臥室被換成儲藏室,門縫下露出一角枕頭,暗示風險" loading="lazy" onerror="this.closest('figure').style.display='none'">
+        </figure>
+        <div class="route-text"><b>C 改定義</b> —— COST:業主接受度</div>
+      </div>
+      <div class="route-card">
+        <figure class="ill">
+          <img src="assets/arch/p5-d.png" alt="D 找人:會議桌俯視,四張椅子四頂不同的安全帽/圖章代表結構、機電、消防、業主,主位一張空椅拉開" loading="lazy" onerror="this.closest('figure').style.display='none'">
+        </figure>
+        <div class="route-text"><b>D 跳出 AI 找人</b> —— COST:時間</div>
+      </div>
+    </div>
+    <p class="keyline">越資深的人,越早選 D。</p>
+  </section>
+
+  <!-- 6 — 動手三・全員當一次總指揮 -->
+  <section class="slide dark" data-title="動手三・當一次總指揮">
+    <div class="kicker"><span class="arrow">↗</span> <span>Hands-on 3</span> <span class="num">06 / 08</span></div>
+    <div class="compare-label" style="margin-bottom:8px;">全員動手 ｜ 每個人都要當一次總指揮,不是看我表演</div>
+    <h2 class="display">開第二個 AI,叫它複核第一個</h2>
+    <p class="body" style="margin-top:2px;">上一頁的 D 是找人。找人之前,還有一步更快的——先讓第二個 AI 幫你複核第一個,<b>你來定案</b>。</p>
+    <div class="handson" style="margin:24px 0;">
+      <div class="hstep"><span class="hn">Step 1</span><span class="ht">開第二個 AI——換一家就好(另開分頁)</span></div>
+      <div class="hstep"><span class="hn">Step 2</span><span class="ht">複製下方的複核任務卡,貼進第二個 AI</span></div>
+      <div class="hstep"><span class="hn">Step 3</span><span class="ht">把第一個 AI 的 FAIL 報告整段接著貼上</span></div>
+      <div class="hstep"><span class="hn">Step 4</span><span class="ht">你來定案:根據結果,寫下你的決定與理由</span></div>
+    </div>
+    <div class="p6-main-row" style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="flex:2 1 560px;min-width:0;">
+        <p class="body">這張卡沒有要 AI 扮演誰——它寫清楚四件事:<b>起點、終點、流程、修正</b>。任務寫清楚,換哪一家 AI 來做都一樣。第 4 頁練的是分工,這一頁練的是<b>重複檢討的能力</b>。</p>
+        <div class="codewrap" style="margin-top:16px;">
+          <div class="codebar"><span class="muted">複核任務卡 · prompt 範本<span class="scrollhint">⇣ 內文可捲動</span></span>
+            <button class="copybtn" onclick="copyBlock('tplAdvisor',this)">複製複核任務卡</button>
+          </div>
+          <pre class="code" id="tplAdvisor">【任務】複核下面這份 AI 檢討報告——找出報告與標準之間對不上的地方。
+【起點】輸入兩樣:1) 我原本的檢討標準 2) 第一個 AI 的報告(含 PASS/FAIL 與差值)。
+【終點】輸出固定三行,多一個字都不要:
+同意 / 不同意
+理由:(一句話,指出證據——哪一條標準、哪一個數字)
+下一步:(一句話——回到哪一步重做,或可以定案)
+
+【流程】依序驗三件事,每一件都要對回輸入的原文:
+1. 適用範圍:這個空間適用這條標準嗎?(例:居室標準不能拿去查停車場)
+2. 數字:報告裡的數字,跟標準、跟實測值,對得上嗎?
+3. 邊界:報告有沒有超出檢核範圍、多給了設計建議?
+【修正】發現錯誤,不要只說錯——要說明從哪一步重來;資料不足就寫「無法複核」,不准補猜。</pre>
+        </div>
+      </div>
+      <div style="flex:1 1 260px;display:flex;flex-direction:column;justify-content:center;">
+        <p class="keyline" style="margin:0;">「根據結果:你的決定是哪一個?」——把決定和理由寫下來,你就當過一次總指揮了。</p>
+      </div>
+    </div>
+    <div class="p6-img-row">
+      <figure class="ill">
+        <img src="assets/arch/p6-a.png" alt="兩台筆電面對面,螢幕各有一份報告,中間坐著一個人,手裡一支筆懸在一張空白便箋上等他寫" loading="lazy" onerror="this.closest('figure').style.display='none'">
+      </figure>
+      <figure class="ill">
+        <img src="assets/arch/p6-b.png" alt="協調會速寫:主持建築師立於桌首,桌邊多位顧問各自遞出圖說,主持人手中只有一枚章,人群線條淡,主持人與章用實線" loading="lazy" onerror="this.closest('figure').style.display='none'">
+      </figure>
+    </div>
+  </section>
+
+  <!-- 7 — 白板 -->
+  <section class="slide" data-title="白板">
+    <div class="kicker"><span class="arrow">↗</span> <span>Board</span> <span class="num">07 / 08</span></div>
+    <h2 class="display">「我選 X,因為___。」</h2>
+    <p class="body">把你的決定貼出來:FAIL 報告截圖貼左半邊、兩張便利貼(A/B/C/D 那張+「我採用了誰」那張)貼右半邊。</p>
+    <a class="btnbox ext board" href="board/board.html?room=arch1" target="_blank" rel="noopener" style="margin-top:8px;">進入白板 — 貼你的 FAIL 報告與決策卡</a>
+    <figure class="ill ill-full">
+      <img src="assets/arch/p7-a.png" alt="白板速寫:左半貼著幾張截圖樣的紙,右半兩排便利貼,一隻手正把一張便利貼按上去" loading="lazy" onerror="this.closest('figure').style.display='none'">
+    </figure>
+  </section>
+
+  <!-- 8 — 結語 -->
+  <section class="slide dark letter" data-title="結語">
+    <div class="letter-eyebrow">結語</div>
+    <div class="letter-body">「定案的規矩要立好,<br>而且要立在你自己身上。」</div>
+    <div class="letter-foot">檢討標準是你定的,顧問是你請的,最後一句話是你的。</div>
+    <figure class="ill ill-small">
+      <img src="assets/arch/p8-a.png" alt="一張信紙,右下角一枚深色落款印章,旁邊一支擱下的鋼筆,大量留白" loading="lazy" onerror="this.closest('figure').style.display='none'">
+    </figure>
+  </section>
+
+</main>
+
+<!-- footer / controls -->
+<div class="foot"></div>
+<div class="navbtns">
+  <button id="prev" aria-label="prev">&#8592;</button>
+  <button id="next" aria-label="next">&#8594;</button>
+</div>
+<div class="counter"><span id="cur">01</span><span class="muted"> / 08</span></div>
+<div class="hint">← → 翻頁 ｜ 每一頁是一個節拍</div>
+
+<script>
+/* ---------------- deck navigation ---------------- */
+const slides=[...document.querySelectorAll('.slide')];
+const N=slides.length;
+let idx=0;
+const progline=document.getElementById('progline');
+const curEl=document.getElementById('cur');
+
+/* ---------------- slide scroll affordance (驗收標準 §六): show ⇣ only when the active slide can actually scroll ---------------- */
+function updateScrollAffordance(){
+  const s=slides[idx];
+  requestAnimationFrame(()=>{
+    s.classList.toggle('can-scroll', s.scrollHeight-s.clientHeight>4);
+  });
+}
+
+function go(n){
+  n=Math.max(0,Math.min(N-1,n));
+  if(n===idx && slides[idx].classList.contains('active'))return;
+  slides[idx].classList.remove('active');
+  slides[idx].classList.remove('can-scroll');
+  idx=n;
+  slides[idx].classList.add('active');
+  slides[idx].scrollTop=0;
+  progline.style.width=((idx+1)/N*100)+'%';
+  document.body.classList.toggle('dark-mode',slides[idx].classList.contains('dark'));
+  curEl.textContent=String(idx+1).padStart(2,'0');
+  document.getElementById('prev').disabled=idx===0;
+  document.getElementById('next').disabled=idx===N-1;
+  updateScrollAffordance();
+}
+document.getElementById('next').onclick=()=>go(idx+1);
+document.getElementById('prev').onclick=()=>go(idx-1);
+window.addEventListener('resize',updateScrollAffordance);
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='AUDIO')return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(idx+1);}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(idx-1);}
+  else if(e.key>='1'&&e.key<='9'){go(parseInt(e.key)-1);}
+  else if(e.key==='0'){go(9);}
+  else if(e.key==='Home'){go(0);}
+  else if(e.key==='End'){go(N-1);}
+});
+go(0);
+document.getElementById('brandHome').onclick=()=>go(0);
+
+/* ---------------- generic copy helpers (kept from source deck) ---------------- */
+function copyText(txt,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='已複製 ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent=o;btn.classList.remove('done');},1600);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>{fallbackCopy(txt);done();});}
+  else{fallbackCopy(txt);done();}
+}
+function fallbackCopy(txt){const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);}
+function copyBlock(id,btn){
+  const el=document.getElementById(id);
+  if(!el)return;
+  copyText(el.textContent,btn);
+}
+/* wire any static .flowbox / .spbox copy buttons (kept mechanism, currently unused in this deck) */
+document.querySelectorAll('.flowbox').forEach(box=>{
+  const b=box.querySelector('.spcopy'),t=box.querySelector('.sptext');
+  if(b&&t)b.onclick=()=>copyText(t.textContent,b);
+});
+
+/* ---------------- 動手一 — case-type dynamic assembly (same pattern as the source deck's slide-7 function list → live block → auto-insert into a prompt slot) ---------------- */
+const CASES=[
+  {k:'daylight',zh:'採光',en:'Daylight Ratio',sub:'建技§41',disabled:false,
+    line:'檢討項目:採光(建築技術規則建築設計施工編第41條)——已帶入官方核驗數值',
+    crit:[
+      '1. 幼兒園及學校教室:採光面積應達樓地板面積 1/5(20%)(建築技術規則建築設計施工編第41條)',
+      '2. 住宅之居室、寄宿舍臥室、醫院病房、兒童福利設施:採光面積應達樓地板面積 1/8(12.5%)(建築技術規則建築設計施工編第41條)',
+      '3. 有效採光面積計算:地板面以上75公分範圍內之窗或開口,不計入採光面積(建築技術規則建築設計施工編第41條)'
+    ]},
+  {k:'smoke',zh:'排煙',en:'Smoke Exhaust',sub:'建技§101/消防§188',disabled:false,
+    line:'檢討項目:排煙(建築技術規則建築設計施工編第101條/各類場所消防安全設備設置標準第188條)——已帶入官方核驗數值',
+    crit:[
+      '1. 排煙口位置:應設於天花板或天花板下80公分範圍內(建技§101/消防§188)',
+      '2. 排煙口開口面積:不得小於防煙區劃樓地板面積2%(建技§101/消防§188)',
+      '3. 防煙區劃:每層樓地板面積每500平方公尺內,以防煙壁區劃(建技§101/消防§188)',
+      '4. 至排煙口水平距離:建技§101訂45公尺、消防§188訂30公尺,兩套規定並行適用,取嚴格者為30公尺'
+    ]},
+  {k:'far',zh:'容積率',en:'FAR',sub:'回家作業',disabled:true},
+  {k:'parking',zh:'車位數',en:'Parking Count',sub:'回家作業',disabled:true}
+];
+let caseSel='daylight';
+const caseListEl=document.getElementById('caseList');
+const caseCountEl=document.getElementById('caseCount');
+const caseTextEl=document.getElementById('caseText');
+const caseSlotEl=document.getElementById('caseSlot');
+const caseCriteriaEl=document.getElementById('caseCriteria');
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function caseLine(c){return c.line||('檢討項目:'+c.zh+'('+c.sub+')——回家作業,尚無核驗數值');}
+
+function buildCase(){
+  const c=CASES.find(x=>x.k===caseSel);
+  if(!c){
+    if(caseSlotEl)caseSlotEl.textContent='尚未選擇檢討項目';
+    if(caseCriteriaEl)caseCriteriaEl.textContent='';
+    if(caseTextEl)caseTextEl.innerHTML='<span class="ph">← 先在左側選一個檢討項目。</span>';
+    if(caseCountEl)caseCountEl.innerHTML='已選檢討項目:<b>無</b>';
+    return;
+  }
+  const line=caseLine(c);
+  const critText=(c.crit&&c.crit.length)?c.crit.join('\n'):'尚無核驗數值(回家作業項目)';
+  if(caseSlotEl)caseSlotEl.textContent=line;
+  if(caseCriteriaEl)caseCriteriaEl.textContent=critText;
+  if(caseTextEl){
+    caseTextEl.innerHTML=esc(line)+'\n'+esc(critText)+'\n<span class="gk">（已自動帶入上方檢討標準卡的檢討項目欄,數值已完成法規逐字核對)</span>';
+    caseTextEl._plain=line+'\n'+critText;
+  }
+  if(caseCountEl)caseCountEl.innerHTML='已選檢討項目:<b>'+esc(c.zh)+'</b>';
+}
+function refreshCaseSel(){
+  [...caseListEl.children].forEach((row,i)=>row.classList.toggle('sel',CASES[i].k===caseSel));
+}
+CASES.forEach(c=>{
+  const row=document.createElement('div');
+  row.className='fnrow'+(c.disabled?' disabled':'');
+  row.innerHTML='<span class="fnum">'+(c.disabled?'—':'✓')+'</span><span class="fzh">'+esc(c.zh)+'</span>'
+    +'<span class="fen">'+esc(c.en)+'</span><span class="fdesc">'+(c.disabled?'回家作業':esc(c.sub))+'</span>';
+  if(!c.disabled){
+    row.onclick=()=>{caseSel=c.k;refreshCaseSel();buildCase();};
+  }
+  caseListEl.appendChild(row);
+});
+refreshCaseSel();
+buildCase();
+const caseCopyBtn=document.getElementById('caseCopy');
+if(caseCopyBtn)caseCopyBtn.onclick=()=>copyText((caseTextEl&&caseTextEl._plain)||'',caseCopyBtn);
+</script>
+</body>
+</html>
