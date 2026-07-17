@@ -212,6 +212,17 @@ a.btnbox.home:before{content:"← ";}
 .p6-img-row img{width:100%;}
 @media (max-width:900px){.p6-img-row figure.ill{flex:1 1 100%;max-width:100%;}}
 
+/* ---------- slide "動手四・編排": orchestration concept diagram (pure HTML/CSS, reuses .hstep/.note) ---------- */
+.orch-diagram{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:stretch;max-width:1120px;margin:24px 0 8px;}
+.orch-diagram .lane{display:flex;flex-direction:column;gap:12px;}
+.orch-diagram .lane .hstep{padding:16px;}
+.orch-diagram .orch-center{display:flex;align-items:center;justify-content:center;}
+.orch-diagram .orch-center .hstep{padding:20px 18px;text-align:center;border-color:var(--color-ink);}
+.orch-diagram .note{margin:4px 0 0;}
+.orch-loop{border:1px solid var(--color-ink);padding:16px 24px;margin:0 0 8px;max-width:1120px;font-size:15px;line-height:1.7;}
+.orch-loop .lab{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.10em;color:var(--color-ash);margin-bottom:6px;}
+.orch-loop .flow{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;}
+
 /* ---------- dark-slide overrides for reused paper components (codewrap / list) ---------- */
 .slide.dark h2.display{color:var(--color-paper);}
 .slide.dark p.body{color:var(--color-paper);}
@@ -240,6 +251,7 @@ body.dark-mode .navbtns button:hover{background:var(--color-paper);color:var(--c
 @media (max-width:900px){
   .tool-grid,.handson{grid-template-columns:1fr 1fr;}
   .weigh-layout,.compare-grid{grid-template-columns:1fr;gap:24px;}
+  .orch-diagram{grid-template-columns:1fr;}
   .hint{display:none;}
   .edgenav,.localesw{display:none;}
   .slide{padding:48px 24px 80px;}
@@ -562,14 +574,93 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
     </div>
   </section>
 
-  <!-- 7 — 白板 -->
-  <section class="slide" data-title="白板">
-    <div class="kicker"><span class="arrow">↗</span> <span>Board</span> <span class="num">07 / 08</span></div>
-    <h2 class="display">「我選 X,因為___。」</h2>
-    <p class="body">把你的決定貼出來:FAIL 報告截圖貼左半邊、兩張便利貼(A/B/C/D 那張+「我採用了誰」那張)貼右半邊。</p>
-    <a class="btnbox ext board" href="board/board.html?room=arch1" target="_blank" rel="noopener" style="margin-top:8px;">進入白板 — 貼你的 FAIL 報告與決策卡</a>
+  <!-- 7 — 動手四・編排(Agent Orchestration) -->
+  <section class="slide top" data-title="動手四・編排">
+    <div class="kicker"><span class="arrow">↗</span> <span>Orchestration</span> <span class="num">07 / 08</span></div>
+    <h2 class="display">你只做決策,一群 agent 平行替你跑 04 和 06</h2>
+    <p class="lead">剛才你一個人跑完:找法源、跑檢討標準卡(04)、FAIL 之後選 A/B/C/D(05)、再開第二個 AI 複核(06)。能不能在同一個專案裡,同時派很多 agent 平行跑 04 和 06,我只留下 05 的決策?</p>
+    <p class="keyline">你只定案;廣度交給平行的 sub-agents,深度交給一個 loop 檢查 agent 自己轉。</p>
+
+    <div class="orch-diagram">
+      <div class="lane">
+        <div class="compare-label">Lane · 04 檢討</div>
+        <div class="hstep"><span class="hn">Step 1</span><span class="ht">找法源(HJPLUS KB)</span></div>
+        <div class="hstep"><span class="hn">Step 2</span><span class="ht">跑檢討標準卡 → PASS/FAIL</span></div>
+        <div class="hstep"><span class="hn">Step 3</span><span class="ht">配圖·生一張示意</span></div>
+        <div class="note"><span class="tag">平行 ⇉</span> 三個一起跑</div>
+      </div>
+      <div class="orch-center">
+        <div class="hstep" style="background:var(--color-ink);color:var(--color-paper);"><span class="hn" style="color:var(--color-graphite);">你 · 05</span><span class="ht">只做決策<br>A / B / C / D</span></div>
+      </div>
+      <div class="lane">
+        <div class="compare-label">Lane · 06 複核</div>
+        <div class="hstep"><span class="hn">Step 1</span><span class="ht">開第二個 AI 複核</span></div>
+        <div class="hstep"><span class="hn">Step 2</span><span class="ht">比對適用範圍與數字</span></div>
+        <div class="hstep"><span class="hn">Step 3</span><span class="ht">回報 同意/不同意</span></div>
+        <div class="note"><span class="tag">平行 ⇉</span> 代跑,不代決</div>
+      </div>
+    </div>
+    <div class="orch-loop">
+      <span class="lab">LOOP CHECK AGENT · 自主檢核循環</span>
+      <span class="flow">你·05 → 04 依新決策重算 → 06 自動複核 → ⟳ 回 05</span>
+    </div>
+
+    <div class="fn-eyebrow">— 分工:平行代跑 + 一個 loop 收斂 —</div>
+    <p class="body" style="margin-bottom:4px;"><b>複數 sub-agents(平行代跑)</b></p>
+    <ul class="list">
+      <li>規劃 → ops(Sol)</li>
+      <li>產出可用的 .py → Terra(Sonnet)</li>
+      <li>複核·review → ops</li>
+      <li>免思考的繁瑣執行 → Luna(Haiku)</li>
+      <li>配圖(生圖) → codex(gpt-image)</li>
+      <li>設計圖 prompt → Antigravity(agy -p)</li>
+    </ul>
+    <p class="body" style="margin:12px 0 4px;"><b>一個 LOOP CHECK AGENT(閉環驅動)</b></p>
+    <ul class="list">
+      <li>盯每次 05 決策 → 觸發 04 重算 → 收 06 複核 → 回報是否收斂;不外包決策,自動轉到「06 通過或你喊停」。</li>
+    </ul>
+
+    <div class="codewrap" style="margin-top:16px;">
+      <div class="codebar"><span class="muted">編排 pseudocode · takeaway<span class="scrollhint">⇣ 內文可捲動</span></span>
+        <button class="copybtn" onclick="copyBlock('tplOrchestrate',this)">複製編排 pseudocode</button>
+      </div>
+      <pre class="code" id="tplOrchestrate">任務 = 一份可用的檢討成果 + 一張附圖   # 我只做決策
+
+團隊 = 一群專家,分工:
+    規劃          → ops(Sol)          # 擬策略、拆任務表
+    產出可用的 .py → Terra(Sonnet)     # 寫出能跑的檢討程式
+    複核 / review → ops               # 回頭查產出對不對
+    繁瑣執行       → Luna(Haiku)       # 免思考的重複整理
+    配圖(生圖)     → codex(gpt-image)  # 產一張示意圖
+    設計圖 prompt → agy -p            # 描述設計圖長怎樣
+
+平行執行(團隊)                        # 複數 sub-agents,六個一起跑不排隊
+建構 交回 = 成果.py + 附圖.png
+
+# 一個 LOOP CHECK AGENT 自己轉的閉環(自主檢核循環):
+迴圈 每當我改 05 決策:
+    04 依新決策重算 → 得到新結果
+    06 自動複核新結果 → 同意 / 不同意
+    回到 05                          # 直到 06 通過,或我喊停
+
+我 = 只看匯合結果 + loop 收斂狀態 → 定案(A / B / C / D)   # 05 不外包</pre>
+    </div>
+
+    <div class="codewrap" style="margin-top:16px;">
+      <div class="codebar"><span class="muted">想深入才看 · 真實 CLI<span class="scrollhint">⇣ 內文可捲動</span></span>
+        <button class="copybtn" onclick="copyBlock('tplCliReal',this)">複製真實 CLI</button>
+      </div>
+      <pre class="code" id="tplCliReal"># 平行 = 同時開多個 headless(-p / exec)子任務,各自獨立 context
+codex exec --sandbox workspace-write --skip-git-repo-check -C ./proj "寫出 daylight_check.py,吃實測值輸出 PASS/FAIL"
+codex exec --sandbox workspace-write -C ./proj "產一張採光檢討示意圖存成 ./fig.png"   # gpt-image
+agy -p "描述這張設計圖要長怎樣,給生圖用的 prompt" --dangerously-skip-permissions
+# 多數分工用 harness 自己的 sub-agent(內部就能平行開),
+# 只有要 CLI 專屬能力(如 codex 的 gpt-image-2)才 shell 出去。</pre>
+    </div>
+
+    <div class="note" style="margin-top:24px;"><span class="tag">邊界:</span>平行的是「代跑」不是「代決」——匯合後的 A/B/C/D 永遠回到你。model-tier 只影響成本與速度,不影響誰負責。</div>
     <figure class="ill ill-full">
-      <img src="assets/arch/p7-a.png" alt="白板速寫:左半貼著幾張截圖樣的紙,右半兩排便利貼,一隻手正把一張便利貼按上去" loading="lazy" onerror="this.closest('figure').style.display='none'">
+      <img src="assets/arch/p7-a.png" alt="編排速寫:中間一人握一枚章做決策,左右兩條輸送帶各數個小 agent 平行代跑,右帶尾端吐出一張附圖,下方回饋箭頭繞回中心" loading="lazy" onerror="this.closest('figure').style.display='none'">
     </figure>
   </section>
 
