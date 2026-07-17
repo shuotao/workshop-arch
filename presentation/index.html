@@ -652,24 +652,37 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
     <p class="body">把下面兩區改成你的案子。語意可以有光譜;指令要黑白分明、直指工具,不然它會用猜的、甚至幻覺出不存在的功能。</p>
     <div class="codewrap" style="margin-top:12px;">
       <div class="codebar"><span class="muted">① 自然語言 · 給人(可以有光譜)</span></div>
-      <textarea id="cmdHuman" class="cmd-ta" spellcheck="false">我要檢查這案子的採光合不合格,
-算給我看,不合格就說差多少,再配一張示意圖。</textarea>
+      <textarea id="cmdHuman" class="cmd-ta" spellcheck="false" style="min-height:78px;">我在做一個幼兒園案子,想檢查採光夠不夠。
+幫我照法規算一遍,不合格就告訴我差多少,順便配一張示意圖。
+我只想看結果,然後決定要不要改設計。</textarea>
       <div class="codebar" style="border-top:1px solid var(--color-bone);"><span class="muted">② 明確指令 · 給機器(黑白分明,直指工具,零猜測)</span>
         <button class="copybtn" onclick="copyText(document.getElementById('cmdMachine').value,this)">複製明確指令</button>
       </div>
-      <textarea id="cmdMachine" class="cmd-ta" spellcheck="false">model = codex/sol        # 直指模型,不猜「sol」是誰
-mode  = -p               # headless,直接跑不進互動
-skill = imagegen         # 直指生圖工具,不讓它幻覺功能
-task  = 依建技§41 算採光比 → PASS/FAIL(FAIL 寫差多少)
-out   = 檢討.md + 示意圖.png
-# 生圖也可走 Antigravity: agy -p --skill nano-banana "採光示意圖"</textarea>
+      <textarea id="cmdMachine" class="cmd-ta" spellcheck="false" style="min-height:300px;"># 目標(黑白分明,不留語意給它猜)
+案子=幼兒園   檢查=採光   法源=建技§41(採光面積 ≥ 樓地板 1/5)
+產出=檢討.md(逐條 PASS/FAIL,FAIL 寫差多少) + 示意圖.png
+
+# 派工:一個目標拆給幾個子代理平行跑(直指模型與工具)
+規劃   → codex/sol   -p                    # 拆步驟、定判準
+算採光 → codex/terra -p                    # 寫能跑的 .py:讀實測→比§41→PASS/FAIL
+配圖   → codex       -p --skill imagegen   # gpt-image 生一張採光示意
+複核   → codex/sol   -p                    # 回頭查算得對不對(就是 06 那步)
+
+# 自主檢核循環:我一改設計就自動重跑上面
+迴圈 直到(採光 PASS 或 我喊停)
+
+# 想換?(改一格就好,不用重寫)
+#   換模型:sol 最強最貴 / terra 均衡 / luna 最省
+#   換生圖:--skill imagegen  →  agy -p --skill nano-banana "採光示意圖"
+#   換子代理:codex 不順手 → claude -p 或 agy -p</textarea>
       <div class="codebar" style="border-top:1px solid var(--color-bone);justify-content:flex-end;gap:8px;">
         <button class="copybtn" onclick="copyPack(this)">複製整包</button>
         <button class="copybtn" onclick="resetCmd()">還原範本</button>
       </div>
     </div>
     <div class="note" style="margin-top:12px;"><span class="tag">為什麼拆兩區:</span>語意給「人」、指令給「機器」——在該明確的地方拆出一個明確指令區,就是不讓 agent 用語意猜。</div>
-    <a class="btnbox ext board" href="board/board.html?room=slide7" target="_blank" rel="noopener" style="margin-top:16px;">分享你的「明確指令區」— 貼上來互相看怎麼寫得明確</a>
+    <p class="body" style="margin-top:16px;">看完上面的範例 → 改成你的案子 → 按「複製明確指令」拿去跑。改完想分享,再貼上白板（純分享用）：</p>
+    <a class="btnbox ext board" href="board/board.html?room=slide7" target="_blank" rel="noopener" style="margin-top:8px;">分享白板 — 貼你改好的「明確指令區」,互相看怎麼寫得明確</a>
 
     <div class="note" style="margin-top:24px;"><span class="tag">邊界:</span>平行的是「代跑」不是「代決」——匯合後的 A/B/C/D 永遠回到你。model-tier 只影響成本與速度,不影響誰負責。</div>
     <figure class="ill ill-full">
@@ -758,8 +771,8 @@ function copyBlock(id,btn){
   copyText(el.textContent,btn);
 }
 function copyPack(btn){var h=document.getElementById('cmdHuman').value,m=document.getElementById('cmdMachine').value;copyText('【語意】\n'+h+'\n\n【明確指令】\n'+m,btn);}
-var _CMD_H='我要檢查這案子的採光合不合格,\n算給我看,不合格就說差多少,再配一張示意圖。';
-var _CMD_M='model = codex/sol        # 直指模型,不猜「sol」是誰\nmode  = -p               # headless,直接跑不進互動\nskill = imagegen         # 直指生圖工具,不讓它幻覺功能\ntask  = 依建技§41 算採光比 → PASS/FAIL(FAIL 寫差多少)\nout   = 檢討.md + 示意圖.png\n# 生圖也可走 Antigravity: agy -p --skill nano-banana "採光示意圖"';
+var _CMD_H=(document.getElementById('cmdHuman')||{}).value||'';
+var _CMD_M=(document.getElementById('cmdMachine')||{}).value||'';
 function resetCmd(){document.getElementById('cmdHuman').value=_CMD_H;document.getElementById('cmdMachine').value=_CMD_M;}
 /* wire any static .flowbox / .spbox copy buttons (kept mechanism, currently unused in this deck) */
 document.querySelectorAll('.flowbox').forEach(box=>{
