@@ -11,7 +11,7 @@
 |---|---|---|
 | **A1 零自造法規數字** | index.html 與 prompt-templates.md 內,所有法規判準數值必須是「【講師填入】」佔位;任何模型不得填入真實建技/消防條文數值 | grep 判準區塊,出現具體數值即 FAIL |
 | **A2 範本一致性** | index.html 內 `#tplCriteria` / `#tplAdvisor` 注入的文字,必須與 prompt-templates.md 的範本一/範本二逐字一致(caseSlot 動態行除外) | diff 比對 |
-| **A3 board 不可動** | presentation/board/ 整目錄與 WorkShop 原版 byte-level 相同(部署時才改 firebase-config) | diff -r |
+| **A3 board 關鍵檔不可動** | presentation/board/board.html 與 board.css 須與 WorkShop 原版 byte-level 相同(部署時才改 firebase-config);board.js 因今日(2026-07-17)UX 改版(空白鍵+拖曳平移/滾輪縮放/按0復位)刻意偏離,不列入本檢;database.rules.json 因新增房間 slide2/slide7(commit 14f80e4)刻意偏離,不比對 byte-level,改驗證 JSON 合法且房間白名單涵蓋 slide2/slide7 | diff(board.html/board.css)+ JSON 語意檢查(database.rules.json) |
 | **A4 黃金路徑優先** | 主線動線必須只依賴「一個網頁聊天視窗」;IDE/CLI 內容必須標示「進階」且不得出現在主線步驟裡 | 人工審查 slide 1/4 |
 | **A5 佔位不可上場** | 工作坊舉行前,所有【講師填入】必須由講師親自填妥並簽核;帶佔位符的版本禁止投影給學員 | 開場前 grep「講師填入」= 0 |
 

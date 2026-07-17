@@ -28,7 +28,33 @@
 3. 邊界:報告有沒有超出檢核範圍、多給了設計建議?
 【修正】發現錯誤,不要只說錯——要說明從哪一步重來;資料不足就寫「無法複核」,不准補猜。
 
+# 範本三(編排 pseudocode)
+
+任務 = 一份可用的檢討成果 + 一張附圖   # 我只做決策
+
+團隊 = Agents co-work with sub-agents(experts):
+# 主 agent 互動不掛 flag;sub-agents headless — codex 用 exec、其他 CLI 用 -p
+    規劃(主 agent) → codex -m sol             # 指揮官:拆任務、派工、匯總、盯 loop
+    產出可用的 .py → codex exec -m terra      # 寫能跑的檢討程式(codex=exec)
+    複核 / review → claude -p --model sonnet  # 換一家 AI 複核(claude/agy 用 --model)
+    繁瑣執行       → codex exec -m luna        # 免思考的重複整理
+    配圖(生圖)     → codex call skill/imagegen # → gpt-image(= 之前生 logo 那個)
+
+平行執行(sub-agents)                  # 六個一起跑不排隊
+建構 交回 = 成果.py + 附圖.png
+
+# 一個 LOOP CHECK AGENT 自己轉的閉環(自主檢核循環):
+迴圈 每當我改 05 決策:
+    04 依新決策重算 → 得到新結果
+    06 自動複核新結果 → 同意 / 不同意
+    回到 05                          # 直到 06 通過,或我喊停
+
+我 = 只看匯合結果 + loop 收斂狀態 → 定案(A / B / C / D)   # 05 不外包
+
 ---
 > 本檔由 index.html 現行注入區塊反向同步(2026-07-13),為 A2 一致性檢核的比對基準。
 > 2026-07-13 觀念升級(委託人裁定):兩卡從「人設 prompt」改為「任務契約」——起點/終點/流程/邊界/修正,
 > 不再替 AI 定義角色;任務寫清楚,換哪家模型執行結果都應一致。這是第 6 頁「重複檢討能力」的載體。
+> 2026-07-17 新增範本三:對應第 7 頁「動手四・編排」的 `#tplOrchestrate` 區塊,逐字同步。
+> model-tier/CLI 旗標精確度(codex 用 exec+-m,claude/agy 用 -p+--model)照 CLAUDE.md 的
+> Model-tier/CLI facts block 為準,不得混用或幻覺出不存在的旗標。
