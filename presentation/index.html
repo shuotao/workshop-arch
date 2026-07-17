@@ -136,6 +136,8 @@ a.toolcard .dl:before{content:"↓ ";}
 .copybtn:focus-visible,.gencopy:focus-visible,.navbtns button:focus-visible,a.btnbox:focus-visible,a.toolcard:focus-visible{outline:2px solid var(--color-ink);outline-offset:2px;}
 .slide.dark .copybtn:focus-visible,.slide.dark .gencopy:focus-visible,.slide.dark .navbtns button:focus-visible,.slide.dark a.btnbox:focus-visible,.slide.dark a.toolcard:focus-visible{outline-color:#fff;}
 pre.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:16px 24px;overflow-y:auto;max-height:320px;white-space:pre-wrap;word-break:break-word;background:var(--color-paper);color:var(--color-ink);}
+.cmd-ta{display:block;width:100%;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:16px 24px;background:var(--color-paper);color:var(--color-ink);border:none;resize:vertical;min-height:88px;}
+.cmd-ta:focus{outline:2px solid var(--color-ink);outline-offset:-2px;}
 
 /* ---------- slide "動手一": case list (left) + live case block (right) — reuses the slide-7 dynamic-assembly pattern ---------- */
 .weigh-layout{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:stretch;max-width:1120px;margin-top:24px;}
@@ -646,17 +648,28 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
 我 = 只看匯合結果 + loop 收斂狀態 → 定案(A / B / C / D)   # 05 不外包</pre>
     </div>
 
-    <div class="codewrap" style="margin-top:16px;">
-      <div class="codebar"><span class="muted">想深入才看 · 真實 CLI<span class="scrollhint">⇣ 內文可捲動</span></span>
-        <button class="copybtn" onclick="copyBlock('tplCliReal',this)">複製真實 CLI</button>
+    <div class="fn-eyebrow" style="margin-top:24px;">— 動手:語意給人,指令給機器 —</div>
+    <p class="body">把下面兩區改成你的案子。語意可以有光譜;指令要黑白分明、直指工具,不然它會用猜的、甚至幻覺出不存在的功能。</p>
+    <div class="codewrap" style="margin-top:12px;">
+      <div class="codebar"><span class="muted">① 自然語言 · 給人(可以有光譜)</span></div>
+      <textarea id="cmdHuman" class="cmd-ta" spellcheck="false">我要檢查這案子的採光合不合格,
+算給我看,不合格就說差多少,再配一張示意圖。</textarea>
+      <div class="codebar" style="border-top:1px solid var(--color-bone);"><span class="muted">② 明確指令 · 給機器(黑白分明,直指工具,零猜測)</span>
+        <button class="copybtn" onclick="copyText(document.getElementById('cmdMachine').value,this)">複製明確指令</button>
       </div>
-      <pre class="code" id="tplCliReal"># 平行 = 同時開多個 headless(-p / exec)子任務,各自獨立 context
-codex exec --sandbox workspace-write --skip-git-repo-check -C ./proj "寫出 daylight_check.py,吃實測值輸出 PASS/FAIL"
-codex exec --sandbox workspace-write -C ./proj "產一張採光檢討示意圖存成 ./fig.png"   # gpt-image
-agy -p "描述這張設計圖要長怎樣,給生圖用的 prompt" --dangerously-skip-permissions
-# 多數分工用 harness 自己的 sub-agent(內部就能平行開),
-# 只有要 CLI 專屬能力(如 codex 的 gpt-image-2)才 shell 出去。</pre>
+      <textarea id="cmdMachine" class="cmd-ta" spellcheck="false">model = codex/sol        # 直指模型,不猜「sol」是誰
+mode  = -p               # headless,直接跑不進互動
+skill = imagegen         # 直指生圖工具,不讓它幻覺功能
+task  = 依建技§41 算採光比 → PASS/FAIL(FAIL 寫差多少)
+out   = 檢討.md + 示意圖.png
+# 生圖也可走 Antigravity: agy -p --skill nano-banana "採光示意圖"</textarea>
+      <div class="codebar" style="border-top:1px solid var(--color-bone);justify-content:flex-end;gap:8px;">
+        <button class="copybtn" onclick="copyPack(this)">複製整包</button>
+        <button class="copybtn" onclick="resetCmd()">還原範本</button>
+      </div>
     </div>
+    <div class="note" style="margin-top:12px;"><span class="tag">為什麼拆兩區:</span>語意給「人」、指令給「機器」——在該明確的地方拆出一個明確指令區,就是不讓 agent 用語意猜。</div>
+    <a class="btnbox ext board" href="board/board.html?room=slide7" target="_blank" rel="noopener" style="margin-top:16px;">分享你的「明確指令區」— 貼上來互相看怎麼寫得明確</a>
 
     <div class="note" style="margin-top:24px;"><span class="tag">邊界:</span>平行的是「代跑」不是「代決」——匯合後的 A/B/C/D 永遠回到你。model-tier 只影響成本與速度,不影響誰負責。</div>
     <figure class="ill ill-full">
@@ -744,6 +757,10 @@ function copyBlock(id,btn){
   if(!el)return;
   copyText(el.textContent,btn);
 }
+function copyPack(btn){var h=document.getElementById('cmdHuman').value,m=document.getElementById('cmdMachine').value;copyText('【語意】\n'+h+'\n\n【明確指令】\n'+m,btn);}
+var _CMD_H='我要檢查這案子的採光合不合格,\n算給我看,不合格就說差多少,再配一張示意圖。';
+var _CMD_M='model = codex/sol        # 直指模型,不猜「sol」是誰\nmode  = -p               # headless,直接跑不進互動\nskill = imagegen         # 直指生圖工具,不讓它幻覺功能\ntask  = 依建技§41 算採光比 → PASS/FAIL(FAIL 寫差多少)\nout   = 檢討.md + 示意圖.png\n# 生圖也可走 Antigravity: agy -p --skill nano-banana "採光示意圖"';
+function resetCmd(){document.getElementById('cmdHuman').value=_CMD_H;document.getElementById('cmdMachine').value=_CMD_M;}
 /* wire any static .flowbox / .spbox copy buttons (kept mechanism, currently unused in this deck) */
 document.querySelectorAll('.flowbox').forEach(box=>{
   const b=box.querySelector('.spcopy'),t=box.querySelector('.sptext');

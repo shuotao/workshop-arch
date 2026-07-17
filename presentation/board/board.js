@@ -8,6 +8,7 @@
   var ROOMS = {
     slide2:  '語意光譜',
     slide5:  '心法討論',
+    slide7:  '明確指令分享',
     slide8:  'GEM 成果',
     slide10: '流程截圖'
   };
