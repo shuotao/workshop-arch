@@ -633,7 +633,7 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
 # 主 agent 互動不掛 flag;sub-agents headless — codex 用 exec、其他 CLI 用 -p
     規劃(主 agent) → codex -m sol             # 指揮官:拆任務、派工、匯總、盯 loop
     產出可用的 .py → codex exec -m terra      # 寫能跑的檢討程式(codex=exec)
-    複核 / review → claude -p 或 agy -p       # 換一家 AI 複核(其他 CLI=-p)
+    複核 / review → claude -p --model sonnet  # 換一家 AI 複核(claude/agy 用 --model)
     繁瑣執行       → codex exec -m luna        # 免思考的重複整理
     配圖(生圖)     → codex call skill/imagegen # → gpt-image(= 之前生 logo 那個)
 
@@ -668,7 +668,7 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
 主 agent      = codex -m sol          # 指揮官:拆任務、派工、匯總、盯 loop
 算採光[對應04] → codex exec -m terra   # 讀實測 → 比建技§41 → PASS/FAIL
 配圖          → codex call skill/imagegen  # → gpt-image(= 之前生 logo 那個)
-複核[對應06]  → claude -p 或 agy -p    # 換一家 AI 複核第一家的報告
+複核[對應06]  → claude -p --model sonnet  # 換一家 AI 複核(或 agy -p --model …)
 繁瑣執行      → codex exec -m luna      # 免思考的重複搬運
 
 # [對應05] 匯總回到我 → 我只做 A / B / C / D,不外包
@@ -684,7 +684,8 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
       <span class="tag">flag 速查（這頁用到的）</span><br>
       <code>exec</code>　codex 專用:直接執行、不進互動（headless）<br>
       <code>-p</code>　其他 CLI（claude / agy）的 headless:跑一次就給結果<br>
-      <code>-m &lt;model&gt;</code>　指定模型層:sol 最強最貴 / terra 均衡 / luna 最省<br>
+      <code>-m &lt;model&gt;</code>　<b>codex</b> 指定模型:sol 最強 / terra 均衡 / luna 最省（GPT-5.6 三層）<br>
+      <code>--model &lt;model&gt;</code>　<b>claude</b>:opus / sonnet / haiku ｜ <b>agy</b>:Gemini 模型（旗標是長的 --model,不是 -m）<br>
       <code>call skill/X</code>　呼叫某個 skill,例如 imagegen（gpt-image）、nano-banana 生圖<br>
       <span class="muted">主 agent 不掛這些 = 你直接對話的那個(互動)。想讓 headless 免每步確認:codex 加 <code>--sandbox workspace-write</code>、其他加 <code>--dangerously-skip-permissions</code>。</span>
     </div>
