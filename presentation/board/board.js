@@ -214,9 +214,9 @@
     // 用「原生 DOM 事件」而非 Fabric 的 mouse:*(Fabric 對中鍵/滾輪不一定觸發)。
     // 平移/縮放只改本地 viewportTransform,不動物件世界座標 → 協作同步不受影響。
     var panEl = canvas.upperCanvasEl || canvas.wrapperEl || document.getElementById('board');
-    var isPanning = false, lastPan = null, savedSel = true, savedDraw = false;
+    var isPanning = false, lastPan = null, savedSel = true, savedDraw = false, spaceHeld = false;
     panEl.addEventListener('mousedown', function (e) {
-      if (e.button !== 1) return;                 // 只有中鍵
+      if (e.button !== 1 && !(e.button === 0 && spaceHeld)) return;  // 中鍵,或「空白鍵+左鍵」(觸控板也能用)
       e.preventDefault();
       isPanning = true; lastPan = { x: e.clientX, y: e.clientY };
       savedSel = canvas.selection; savedDraw = canvas.isDrawingMode;
@@ -245,10 +245,17 @@
       canvas.zoomToPoint(new fabric.Point(e.offsetX, e.offsetY), zoom);
     }, { passive: false });
     document.addEventListener('keydown', function (e) {
-      if (e.key !== '0') return;
       var a = canvas.getActiveObject();
       if (a && a.isEditing) return;               // 打字中不攔截
-      canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);  // 復位:縮放100%、回原點
+      if (e.code === 'Space' || e.key === ' ') {  // 空白鍵 = 平移模式(觸控板友善)
+        if (!spaceHeld) { spaceHeld = true; panEl.style.cursor = 'grab'; }
+        e.preventDefault();                        // 別讓頁面捲動
+        return;
+      }
+      if (e.key === '0') canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);  // 復位:縮放100%、回原點
+    });
+    document.addEventListener('keyup', function (e) {
+      if (e.code === 'Space' || e.key === ' ') { spaceHeld = false; if (!isPanning) panEl.style.cursor = ''; }
     });
 
     // 本地修改 → 廣播
