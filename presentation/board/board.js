@@ -127,6 +127,7 @@
     wireToolbar();
     wireImageCapture();
     toast('已進入「' + ROOMS[roomId] + '」白板 — 開始協作吧!', 3200);
+    setTimeout(function () { toast('滾輪縮放 · 按中鍵拖曳移動 · 按 0 復位視圖', 4200); }, 3400);
   }
 
   /* ============================================================
@@ -200,12 +201,50 @@
 
     // 點空白處放置便利貼 / 方框
     canvas.on('mouse:down', function (opt) {
+      if (opt.e && opt.e.button === 1) return;   // 中鍵是平移,不放置
       if (tool !== 'note' && tool !== 'rect') return;
       if (opt.target) return; // 點到既有物件不放置
       var p = canvas.getPointer(opt.e);
       if (tool === 'note') createNote(p.x, p.y);
       else createRect(p.x, p.y);
       setTool('select');
+    });
+
+    // ── 討論白板 UX:滾輪縮放、按中鍵拖曳平移、按 0 復位 ──
+    // 平移/縮放只改本地 viewportTransform,不動物件世界座標 → 協作同步不受影響。
+    var isPanning = false, lastPan = null, savedSel = true;
+    canvas.on('mouse:down', function (opt) {
+      var e = opt.e;
+      if (!e || e.button !== 1) return;          // 只有中鍵
+      isPanning = true; lastPan = { x: e.clientX, y: e.clientY };
+      savedSel = canvas.selection; canvas.selection = false;
+      canvas.discardActiveObject();
+      canvas.setCursor('grabbing');
+      e.preventDefault();
+    });
+    canvas.on('mouse:move', function (opt) {
+      if (!isPanning) return;
+      var e = opt.e, vpt = canvas.viewportTransform;
+      vpt[4] += e.clientX - lastPan.x; vpt[5] += e.clientY - lastPan.y;
+      lastPan = { x: e.clientX, y: e.clientY };
+      canvas.requestRenderAll();
+    });
+    canvas.on('mouse:up', function () {
+      if (!isPanning) return;
+      isPanning = false; canvas.selection = savedSel;
+      canvas.setViewportTransform(canvas.viewportTransform);
+    });
+    canvas.on('mouse:wheel', function (opt) {
+      var zoom = canvas.getZoom() * Math.pow(0.999, opt.e.deltaY);
+      zoom = Math.min(5, Math.max(0.15, zoom));   // 0.15x(看很大範圍)~ 5x
+      canvas.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), zoom);
+      opt.e.preventDefault(); opt.e.stopPropagation();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== '0') return;
+      var a = canvas.getActiveObject();
+      if (a && a.isEditing) return;               // 打字中不攔截
+      canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);  // 復位:縮放100%、回原點
     });
 
     // 本地修改 → 廣播
@@ -425,16 +464,25 @@
   /* ============================================================
      圖片 / 截圖管線
      ============================================================ */
-  function compress(dataURL, maxEdge, q) {
+  // 自適應壓縮:先試高解析度/高品質(讓文字清楚),只有超過大小上限才逐步降,
+  // 拿到「塞得進 Firebase 又最清楚」的那一版。文字截圖需要較高解析度才讀得到。
+  function compress(dataURL, maxEdge, q) { return compressToFit(dataURL, 1000000); }
+  function compressToFit(dataURL, maxBytes) {
+    var STEPS = [[2000, 0.86], [1800, 0.84], [1600, 0.82], [1400, 0.80], [1280, 0.75], [1024, 0.70], [820, 0.66]];
     return new Promise(function (res, rej) {
       var img = new Image();
       img.onload = function () {
-        var w = img.width, h = img.height;
-        var s = Math.min(1, maxEdge / Math.max(w, h));
-        w = Math.round(w * s); h = Math.round(h * s);
-        var c = document.createElement('canvas'); c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        res(c.toDataURL('image/jpeg', q));
+        var out = null;
+        for (var i = 0; i < STEPS.length; i++) {
+          var maxEdge = STEPS[i][0], q = STEPS[i][1];
+          var s = Math.min(1, maxEdge / Math.max(img.width, img.height));
+          var w = Math.round(img.width * s), h = Math.round(img.height * s);
+          var c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          out = c.toDataURL('image/jpeg', q);
+          if (out.length <= maxBytes) break; // 塞得下就用這版(最清楚的)
+        }
+        res(out);
       };
       img.onerror = rej; img.src = dataURL;
     });
@@ -448,10 +496,10 @@
   }
 
   function placeImage(dataURL) {
-    compress(dataURL, 1280, 0.7).then(function (small) {
+    compressToFit(dataURL, 1000000).then(function (small) {
       if (small.length > 1050000) { toast('圖片太大,請裁切後再貼(上限約 800KB)'); return; }
       return fabric.FabricImage.fromURL(small).then(function (img) {
-        var maxW = Math.min(440, canvas.getWidth() * 0.6);
+        var maxW = Math.min(560, canvas.getWidth() * 0.72);
         var sc = img.width > maxW ? maxW / img.width : 1;
         var off = (idToObj.size % 6) * 18;
         img.set({
@@ -523,7 +571,7 @@
 
   function captureScreen() {
     toast('只擷取一張,擷取後立即停止分享');
-    navigator.mediaDevices.getDisplayMedia({ video: true }).then(function (stream) {
+    navigator.mediaDevices.getDisplayMedia({ video: { width: { ideal: 2560 }, height: { ideal: 1440 }, frameRate: { ideal: 5 } } }).then(function (stream) {
       var video = document.createElement('video');
       video.srcObject = stream;
       video.onloadedmetadata = function () {
