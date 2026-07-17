@@ -211,35 +211,39 @@
     });
 
     // ── 討論白板 UX:滾輪縮放、按中鍵拖曳平移、按 0 復位 ──
+    // 用「原生 DOM 事件」而非 Fabric 的 mouse:*(Fabric 對中鍵/滾輪不一定觸發)。
     // 平移/縮放只改本地 viewportTransform,不動物件世界座標 → 協作同步不受影響。
-    var isPanning = false, lastPan = null, savedSel = true;
-    canvas.on('mouse:down', function (opt) {
-      var e = opt.e;
-      if (!e || e.button !== 1) return;          // 只有中鍵
-      isPanning = true; lastPan = { x: e.clientX, y: e.clientY };
-      savedSel = canvas.selection; canvas.selection = false;
-      canvas.discardActiveObject();
-      canvas.setCursor('grabbing');
+    var panEl = canvas.upperCanvasEl || canvas.wrapperEl || document.getElementById('board');
+    var isPanning = false, lastPan = null, savedSel = true, savedDraw = false;
+    panEl.addEventListener('mousedown', function (e) {
+      if (e.button !== 1) return;                 // 只有中鍵
       e.preventDefault();
+      isPanning = true; lastPan = { x: e.clientX, y: e.clientY };
+      savedSel = canvas.selection; savedDraw = canvas.isDrawingMode;
+      canvas.selection = false; canvas.isDrawingMode = false;
+      canvas.discardActiveObject(); canvas.requestRenderAll();
+      panEl.style.cursor = 'grabbing';
     });
-    canvas.on('mouse:move', function (opt) {
+    panEl.addEventListener('auxclick', function (e) { if (e.button === 1) e.preventDefault(); }); // 擋中鍵自動捲動
+    window.addEventListener('mousemove', function (e) {
       if (!isPanning) return;
-      var e = opt.e, vpt = canvas.viewportTransform;
+      var vpt = canvas.viewportTransform;
       vpt[4] += e.clientX - lastPan.x; vpt[5] += e.clientY - lastPan.y;
       lastPan = { x: e.clientX, y: e.clientY };
       canvas.requestRenderAll();
     });
-    canvas.on('mouse:up', function () {
+    window.addEventListener('mouseup', function () {
       if (!isPanning) return;
-      isPanning = false; canvas.selection = savedSel;
+      isPanning = false; canvas.selection = savedSel; canvas.isDrawingMode = savedDraw;
+      panEl.style.cursor = '';
       canvas.setViewportTransform(canvas.viewportTransform);
     });
-    canvas.on('mouse:wheel', function (opt) {
-      var zoom = canvas.getZoom() * Math.pow(0.999, opt.e.deltaY);
+    panEl.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var zoom = canvas.getZoom() * Math.pow(0.999, e.deltaY);
       zoom = Math.min(5, Math.max(0.15, zoom));   // 0.15x(看很大範圍)~ 5x
-      canvas.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), zoom);
-      opt.e.preventDefault(); opt.e.stopPropagation();
-    });
+      canvas.zoomToPoint(new fabric.Point(e.offsetX, e.offsetY), zoom);
+    }, { passive: false });
     document.addEventListener('keydown', function (e) {
       if (e.key !== '0') return;
       var a = canvas.getActiveObject();
