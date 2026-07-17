@@ -607,15 +607,15 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
       <span class="flow">你·05 → 04 依新決策重算 → 06 自動複核 → ⟳ 回 05</span>
     </div>
 
-    <div class="fn-eyebrow">— 分工:平行代跑 + 一個 loop 收斂 —</div>
-    <p class="body" style="margin-bottom:4px;"><b>複數 sub-agents(平行代跑)</b></p>
+    <div class="fn-eyebrow">— 分工:Agents co-work with sub-agents(experts)+ 一個 loop 收斂 —</div>
+    <p class="body" style="margin-bottom:4px;"><b>複數 sub-agents(experts,平行代跑)</b>　<span class="muted">主 agent 互動不掛 flag;sub-agents headless — codex 用 exec、其他 CLI 用 -p</span></p>
     <ul class="list">
-      <li>規劃 → ops(Sol)</li>
-      <li>產出可用的 .py → Terra(Sonnet)</li>
-      <li>複核·review → ops</li>
-      <li>免思考的繁瑣執行 → Luna(Haiku)</li>
-      <li>配圖(生圖) → codex(gpt-image)</li>
-      <li>設計圖 prompt → Antigravity(agy -p)</li>
+      <li>規劃(主 agent) → codex -m sol</li>
+      <li>產出可用的 .py → codex exec -m terra</li>
+      <li>複核·review → claude -p 或 agy -p</li>
+      <li>免思考的繁瑣執行 → codex exec -m luna</li>
+      <li>配圖(生圖) → codex call skill/imagegen（gpt-image）</li>
+      <li>設計圖 prompt → Antigravity（agy -p）</li>
     </ul>
     <p class="body" style="margin:12px 0 4px;"><b>一個 LOOP CHECK AGENT(閉環驅動)</b></p>
     <ul class="list">
@@ -628,15 +628,15 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
       </div>
       <pre class="code" id="tplOrchestrate">任務 = 一份可用的檢討成果 + 一張附圖   # 我只做決策
 
-團隊 = 一群專家,分工:
-    規劃          → ops(Sol)          # 擬策略、拆任務表
-    產出可用的 .py → Terra(Sonnet)     # 寫出能跑的檢討程式
-    複核 / review → ops               # 回頭查產出對不對
-    繁瑣執行       → Luna(Haiku)       # 免思考的重複整理
-    配圖(生圖)     → codex(gpt-image)  # 產一張示意圖
-    設計圖 prompt → agy -p            # 描述設計圖長怎樣
+團隊 = Agents co-work with sub-agents(experts):
+# 主 agent 互動不掛 flag;sub-agents headless — codex 用 exec、其他 CLI 用 -p
+    規劃(主 agent) → codex -m sol             # 指揮官:拆任務、派工、匯總、盯 loop
+    產出可用的 .py → codex exec -m terra      # 寫能跑的檢討程式(codex=exec)
+    複核 / review → claude -p 或 agy -p       # 換一家 AI 複核(其他 CLI=-p)
+    繁瑣執行       → codex exec -m luna        # 免思考的重複整理
+    配圖(生圖)     → codex call skill/imagegen # → gpt-image(= 之前生 logo 那個)
 
-平行執行(團隊)                        # 複數 sub-agents,六個一起跑不排隊
+平行執行(sub-agents)                  # 六個一起跑不排隊
 建構 交回 = 成果.py + 附圖.png
 
 # 一個 LOOP CHECK AGENT 自己轉的閉環(自主檢核循環):
@@ -662,19 +662,18 @@ pre.code::-webkit-scrollbar-track,.gentext::-webkit-scrollbar-track{background:v
 案子=幼兒園   檢查=採光   法源=建技§41(採光面積 ≥ 樓地板 1/5)
 產出=檢討.md(逐條 PASS/FAIL,FAIL 寫差多少) + 示意圖.png
 
-# 派工:一個目標拆給幾個子代理平行跑(直指模型與工具)
-規劃   → codex/sol   -p                    # 拆步驟、定判準
-算採光 → codex/terra -p                    # 寫能跑的 .py:讀實測→比§41→PASS/FAIL
-配圖   → codex       -p --skill imagegen   # gpt-image 生一張採光示意
-複核   → codex/sol   -p                    # 回頭查算得對不對(就是 06 那步)
+# 派工:一個主 agent 指揮,一群 sub-agents(experts)平行代跑
+# 精準:codex 用 exec、其他 CLI 用 -p;主 agent 互動、不掛 flag
+主 agent      = codex -m sol          # 指揮官:拆任務、派工、匯總、盯 loop
+算採光[對應04] → codex exec -m terra   # 讀實測 → 比建技§41 → PASS/FAIL
+配圖          → codex call skill/imagegen  # → gpt-image(= 之前生 logo 那個)
+複核[對應06]  → claude -p 或 agy -p    # 換一家 AI 複核第一家的報告
+繁瑣執行      → codex exec -m luna      # 免思考的重複搬運
 
-# 自主檢核循環:我一改設計就自動重跑上面
-迴圈 直到(採光 PASS 或 我喊停)
+# [對應05] 匯總回到我 → 我只做 A / B / C / D,不外包
+# LOOP:我每改一次 05 決策 → 自動重跑 04 → 06 複核 → 回 05,直到 PASS 或喊停
 
-# 想換?(改一格就好,不用重寫)
-#   換模型:sol 最強最貴 / terra 均衡 / luna 最省
-#   換生圖:--skill imagegen  →  agy -p --skill nano-banana "採光示意圖"
-#   換子代理:codex 不順手 → claude -p 或 agy -p</textarea>
+# 想換?(改一格就好)換模型 sol/terra/luna；換生圖 → agy call skill/nano-banana；換子代理 → claude -p</textarea>
       <div class="codebar" style="border-top:1px solid var(--color-bone);justify-content:flex-end;gap:8px;">
         <button class="copybtn" onclick="copyPack(this)">複製整包</button>
         <button class="copybtn" onclick="resetCmd()">還原範本</button>
