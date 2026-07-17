@@ -4,7 +4,7 @@
       "$roomId": {
         ".read": "auth != null",
         ".write": "auth != null",
-        ".validate": "$roomId.matches(/^slide(5|8|10)$/)",
+        ".validate": "$roomId.matches(/^slide(2|5|8|10)$/)",
         "objects": {
           "$objId": {
             ".validate": "!newData.exists() || newData.hasChildren(['type'])",
